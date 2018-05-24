@@ -1,0 +1,2 @@
+ext['http_port'] =8085
+ext['kafka_topic_name']='transfer-money'

@@ -1,0 +1,67 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '2.0.1'
+}
+
+// environments: 'dev', 'qa', 'stage' or 'prod'
+if (!hasProperty('environmentName')) ext.environmentName = 'dev'
+apply from: "env/${environmentName}.gradle"
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+mainClassName = 'org.example.Application'
+
+shadowJar {
+    classifier = 'fat'
+}
+
+run {
+    args = ['run', mainClassName, "--launcher-class=io.vertx.core.Launcher"]
+}
+
+distributions {
+    main {
+        contents {
+            from("src/main/conf") {
+                into "lib/conf"
+                expand(
+                    http_port: http_port,
+                    kafka_topic_name: kafka_topic_name
+                )
+            }
+        }
+    }
+}
+
+if (hasProperty('distr')) {
+    processResources {
+        exclude '**/*'
+    }
+}
+
+startScripts {
+    classpath += files('conf')
+}
+
+dependencies {
+    compile group: 'com.google.inject', name: 'guice', version: '4.2.0'
+    compile group: 'com.google.guava', name: 'guava', version: '23.0'
+    compile group: 'io.vertx', name:'vertx-kafka-client', version: '3.5.1'
+    compile group: 'com.typesafe', name: 'config', version: '1.3.3'
+
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    compile 'io.vertx:vertx-core:3.5.1'
+    compile 'io.vertx:vertx-web:3.5.1'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile 'io.vertx:vertx-codegen:3.2.1'
+}
